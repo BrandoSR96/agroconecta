@@ -1,6 +1,5 @@
 package com.agroconecta.agroconecta.auth;
 
-import com.agroconecta.agroconecta.service.TokenInvalidoService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +22,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final TokenInvalidoService tokenInvalidoService;
 
     @Override
     protected void doFilterInternal(
@@ -42,13 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-
-        if (tokenInvalidoService.isTokenInvalido(jwt)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"No autorizado\"}");
-            return;
-        }
 
         userEmail = jwtService.extractUsername(jwt);
 

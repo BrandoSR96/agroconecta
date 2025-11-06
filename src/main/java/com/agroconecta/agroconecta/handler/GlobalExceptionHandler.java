@@ -1,9 +1,6 @@
 package com.agroconecta.agroconecta.handler;
 
-import com.agroconecta.agroconecta.exception.EmailAlreadyExistsException;
-import com.agroconecta.agroconecta.exception.InvalidCredentialsException;
-import com.agroconecta.agroconecta.exception.ResourceNotFoundException;
-import com.agroconecta.agroconecta.exception.TokenInvalidException;
+import com.agroconecta.agroconecta.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -87,5 +84,16 @@ public class GlobalExceptionHandler {
                 .message("Ocurrió un error inesperado: " + ex.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("Unauthorized")
+                .message("No autorizado")
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 }

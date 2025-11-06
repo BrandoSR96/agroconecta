@@ -6,6 +6,7 @@ import com.agroconecta.agroconecta.dto.*;
 import com.agroconecta.agroconecta.exception.EmailAlreadyExistsException;
 import com.agroconecta.agroconecta.exception.InvalidCredentialsException;
 import com.agroconecta.agroconecta.exception.TokenInvalidException;
+import com.agroconecta.agroconecta.exception.UnauthorizedException;
 import com.agroconecta.agroconecta.mapper.AuthMapper;
 import com.agroconecta.agroconecta.model.Usuario;
 import com.agroconecta.agroconecta.repository.UsuarioRepository;
@@ -25,7 +26,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final TokenInvalidoService tokenInvalidoService;
     private final AuthMapper authMapper;
 
     @Transactional
@@ -70,7 +70,6 @@ public class AuthService {
 
     @Transactional
     public LogoutResponse logout(LogoutRequest request) {
-
         String token = request.getToken();
 
         if (token == null || token.isBlank()) {
@@ -79,17 +78,18 @@ public class AuthService {
         try {
             String email = jwtService.extractUsername(token);
             Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new TokenInvalidException("Token inválido o ausente"));
+                    .orElseThrow(() -> new UnauthorizedException("No autorizado"));
+
             UserDetailsImpl userDetails = UserDetailsImpl.build(usuario);
             if (!jwtService.isTokenValid(token, userDetails)) {
-                throw new TokenInvalidException("Token inválido o ausente");
+                throw new UnauthorizedException("No autorizado");
             }
-            tokenInvalidoService.invalidarToken(token);
+
             return LogoutResponse.builder()
-                    .mensaje("Sesión cerrada correctamente. Token invalidado.")
+                    .mensaje("Sesión cerrada correctamente.")
                     .build();
         } catch (Exception e) {
-            throw new TokenInvalidException("Token inválido o ausente");
+            throw new UnauthorizedException("No autorizado");
         }
     }
 }
