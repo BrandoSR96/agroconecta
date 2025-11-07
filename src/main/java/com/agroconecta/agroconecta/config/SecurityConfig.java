@@ -4,6 +4,7 @@ import com.agroconecta.agroconecta.auth.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -35,12 +36,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
 
-                        // Endpoints públicos de productos (para el futuro)
-                        .requestMatchers("/productos/detalle/**").permitAll()
-                        .requestMatchers("/productos/buscar").permitAll()
-                        .requestMatchers("/productos/filtro").permitAll()
-                        .requestMatchers("/agricultor/*/metricas").permitAll()
-                        .requestMatchers("/agricultor/*/productos").permitAll()
+                        // Endpoints públicos de productos
+                        .requestMatchers(HttpMethod.GET, "/api/v1/productos/detalle/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/productos/buscar").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/productos/filtro").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/agricultor/*/metricas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/agricultor/*/productos").permitAll()
                         //
                         .anyRequest().authenticated()
                 )
