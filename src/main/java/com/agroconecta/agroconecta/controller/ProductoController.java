@@ -34,7 +34,7 @@ public class ProductoController {
     }
 
     @PermitAll
-    @GetMapping("/detalle/{id}")
+    @GetMapping("/detalles/{id}")
     public ResponseEntity<ProductoDetalle> obtenerDetalleProducto(@PathVariable String id) {
         ProductoDetalle response = productoService.obtenerDetalleProducto(id);
         return ResponseEntity.ok(response);

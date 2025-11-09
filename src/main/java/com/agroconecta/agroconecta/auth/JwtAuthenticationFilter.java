@@ -1,5 +1,7 @@
 package com.agroconecta.agroconecta.auth;
 
+import com.agroconecta.agroconecta.model.Token;
+import com.agroconecta.agroconecta.repository.TokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +24,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final TokenRepository tokenRepository;
+
 
     @Override
     protected void doFilterInternal(
@@ -46,6 +50,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+            boolean tokenRevocado = tokenRepository.findByToken(jwt)
+                    .map(Token::isRevoked)
+                    .orElse(true); // Si no se encuentra, lo tratamos como revocado
+
+            if (tokenRevocado) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
 

@@ -8,15 +8,19 @@ import com.agroconecta.agroconecta.exception.InvalidCredentialsException;
 import com.agroconecta.agroconecta.exception.TokenInvalidException;
 import com.agroconecta.agroconecta.exception.UnauthorizedException;
 import com.agroconecta.agroconecta.mapper.AuthMapper;
+import com.agroconecta.agroconecta.model.Token;
 import com.agroconecta.agroconecta.model.Usuario;
+import com.agroconecta.agroconecta.repository.TokenRepository;
 import com.agroconecta.agroconecta.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.util.Optional;
 import org.springframework.security.core.AuthenticationException;
 
 @Service
@@ -27,6 +31,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final AuthMapper authMapper;
+    private final TokenRepository tokenRepository;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -62,6 +67,13 @@ public class AuthService {
 
             String jwtToken = jwtService.generateToken(userDetails);
 
+            Token tokenEntity = new Token();
+            tokenEntity.setToken(jwtToken);
+            tokenEntity.setUsuario(usuario);
+            tokenEntity.setRevoked(false);
+            tokenEntity.setExpired(false);
+            tokenRepository.save(tokenEntity);
+
             return authMapper.toLoginResponse(usuario, jwtToken);
         } catch (AuthenticationException e) {
             throw new InvalidCredentialsException("Credenciales inválidas");
@@ -69,9 +81,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LogoutResponse logout(LogoutRequest request) {
-        String token = request.getToken();
-
+    public LogoutResponse logout(String token) {
         if (token == null || token.isBlank()) {
             throw new TokenInvalidException("Token inválido o ausente");
         }
@@ -84,6 +94,11 @@ public class AuthService {
             if (!jwtService.isTokenValid(token, userDetails)) {
                 throw new UnauthorizedException("No autorizado");
             }
+            Optional<Token> storedToken = tokenRepository.findByToken(token);
+            storedToken.ifPresent(t -> {
+                t.setRevoked(true);
+                tokenRepository.save(t);
+            });
 
             return LogoutResponse.builder()
                     .mensaje("Sesión cerrada correctamente.")
