@@ -38,11 +38,13 @@ public class ProductoMapper {
         return ProductoResumen.builder()
                 .id(producto.getId())
                 .nombre(producto.getNombre())
+                .descripcion(producto.getDescripcion())
                 .precio(producto.getPrecio())
                 .cantidad(producto.getCantidad())
                 .imagenUrl(producto.getImagenUrl())
                 .categoria(producto.getCategoria())
                 .estado(producto.getEstado())
+                .fechaRegistro(producto.getFechaRegistro())
                 .build();
     }
 
