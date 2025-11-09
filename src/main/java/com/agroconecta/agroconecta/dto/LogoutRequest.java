@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LogoutRequest {
     @NotBlank(message = "El token es obligatorio")
-    @Size(min = 10, message = "Token inavalido")
+    @Size(min = 10, message = "Token invalido o ausente")
     private String token;
 }
