@@ -56,4 +56,7 @@ public class Usuario {
 
     @OneToMany(mappedBy = "agricultor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Producto> productos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorito> favoritos = new ArrayList<>();
 }

@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -109,5 +110,66 @@ public class ProductoService {
         productoMapper.updateEntityFromDTO(producto, updateDTO);
         Producto productoActualizado = productoRepository.save(producto);
         return productoMapper.toUpdateResponseDTO(productoActualizado);
+    }
+
+    @Transactional(readOnly = true)
+    public ListaProductosResponse buscarProductos(String query, int page, int size) {
+        // Sanitizar entrada
+        String queryLimpia = query.trim();
+
+        if (queryLimpia.isEmpty()) {
+            throw new IllegalArgumentException("La búsqueda no puede estar vacía");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Producto> productosPage = productoRepository.buscarPorPalabraClave(queryLimpia, pageable);
+
+        List<ProductoResumen> productos = productosPage.getContent().stream()
+                .map(productoMapper::toResumenDTO)
+                .collect(Collectors.toList());
+
+        return ListaProductosResponse.builder()
+                .page(page)
+                .size(size)
+                .totalItems(productosPage.getTotalElements())
+                .totalPages(productosPage.getTotalPages())
+                .productos(productos)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public ListaProductosResponse filtrarProductos(
+            String categoria,
+            BigDecimal precioMin,
+            BigDecimal precioMax,
+            String orden,
+            int page,
+            int size) {
+
+        // Validar orden
+        if (orden != null && !orden.equalsIgnoreCase("ASC") && !orden.equalsIgnoreCase("DESC")) {
+            throw new IllegalArgumentException("El orden debe ser ASC o DESC");
+        }
+
+        // Validar rango de precios
+        if (precioMin != null && precioMax != null && precioMin.compareTo(precioMax) > 0) {
+            throw new IllegalArgumentException("El precio mínimo no puede ser mayor al precio máximo");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Producto> productosPage = productoRepository.filtrarProductos(
+                categoria, precioMin, precioMax, orden, pageable);
+
+        List<ProductoResumen> productos = productosPage.getContent().stream()
+                .map(productoMapper::toResumenDTO)
+                .collect(Collectors.toList());
+
+        return ListaProductosResponse.builder()
+                .page(page)
+                .size(size)
+                .totalItems(productosPage.getTotalElements())
+                .totalPages(productosPage.getTotalPages())
+                .productos(productos)
+                .build();
     }
 }

@@ -120,4 +120,37 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(FavoritoYaExisteException.class)
+    public ResponseEntity<ErrorResponse> handleFavoritoYaExiste(FavoritoYaExisteException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflict")
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(FavoritoNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleFavoritoNotFound(FavoritoNotFoundException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Not Found")
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
 }

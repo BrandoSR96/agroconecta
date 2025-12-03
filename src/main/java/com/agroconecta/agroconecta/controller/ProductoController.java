@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/v1/productos")
 @RequiredArgsConstructor
@@ -56,4 +58,29 @@ public class ProductoController {
         ProductoUpdateResponse response = productoService.actualizarProducto(id, updateDTO, authentication);
         return ResponseEntity.ok(response);
     }
+
+    @PermitAll
+    @GetMapping("/buscar")
+    public ResponseEntity<ListaProductosResponse> buscarProductos(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        ListaProductosResponse response = productoService.buscarProductos(query, page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @PermitAll
+    @GetMapping("/filtro")
+    public ResponseEntity<ListaProductosResponse> filtrarProductos(
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) BigDecimal precioMin,
+            @RequestParam(required = false) BigDecimal precioMax,
+            @RequestParam(required = false) String orden,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        ListaProductosResponse response = productoService.filtrarProductos(
+                categoria, precioMin, precioMax, orden, page, size);
+        return ResponseEntity.ok(response);
+    }
+
 }
