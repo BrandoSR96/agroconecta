@@ -72,15 +72,26 @@ public class AuthService {
     public LogoutResponse logout(LogoutRequest request) {
         String token = request.getToken();
 
-        if (token == null || token.isBlank()) {
+        // Validación del token (genera error 400)
+        if (token == null || token.isBlank() || token.trim().isEmpty()) {
             throw new TokenInvalidException("Token inválido o ausente");
         }
+
         try {
+            // Intentar extraer el username del token
             String email = jwtService.extractUsername(token);
+
+            if (email == null || email.isBlank()) {
+                throw new TokenInvalidException("Token inválido o ausente");
+            }
+
+            // Buscar el usuario
             Usuario usuario = usuarioRepository.findByEmail(email)
                     .orElseThrow(() -> new UnauthorizedException("No autorizado"));
 
             UserDetailsImpl userDetails = UserDetailsImpl.build(usuario);
+
+            // Validar el token
             if (!jwtService.isTokenValid(token, userDetails)) {
                 throw new UnauthorizedException("No autorizado");
             }
@@ -88,8 +99,22 @@ public class AuthService {
             return LogoutResponse.builder()
                     .mensaje("Sesión cerrada correctamente.")
                     .build();
-        } catch (Exception e) {
+
+        } catch (TokenInvalidException e) {
+            throw e;
+        } catch (UnauthorizedException e) {
+            throw e;
+        } catch (io.jsonwebtoken.MalformedJwtException |
+                 io.jsonwebtoken.security.SignatureException |
+                 IllegalArgumentException e) {
+            // Token malformado o con firma inválida
+            throw new TokenInvalidException("Token inválido o ausente");
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            // Token expirado
             throw new UnauthorizedException("No autorizado");
+        } catch (Exception e) {
+            // Cualquier otro error
+            throw new TokenInvalidException("Token inválido o ausente");
         }
     }
 }
