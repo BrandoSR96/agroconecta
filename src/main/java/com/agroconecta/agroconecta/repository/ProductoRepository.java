@@ -1,5 +1,6 @@
 package com.agroconecta.agroconecta.repository;
 
+import com.agroconecta.agroconecta.enums.EstadoProducto;
 import com.agroconecta.agroconecta.model.Producto;
 import com.agroconecta.agroconecta.model.Usuario;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, String> {
@@ -37,5 +39,23 @@ public interface ProductoRepository extends JpaRepository<Producto, String> {
             @Param("precioMin") BigDecimal precioMin,
             @Param("precioMax") BigDecimal precioMax,
             @Param("orden") String orden,
+            Pageable pageable);
+    //metricas
+    @Query("SELECT COUNT(p) FROM Producto p WHERE p.agricultor.id = :agricultorId")
+    Integer contarProductosPorAgricultor(@Param("agricultorId") UUID agricultorId);
+
+    @Query("SELECT COUNT(p) FROM Producto p WHERE p.agricultor.id = :agricultorId AND p.estado = :estado")
+    Integer contarProductosPorAgricultorYEstado(
+            @Param("agricultorId") UUID agricultorId,
+            @Param("estado") EstadoProducto estado);
+
+    @Query("SELECT MAX(p.fechaActualizacion) FROM Producto p WHERE p.agricultor.id = :agricultorId")
+    java.time.LocalDateTime findUltimaActividadPorAgricultor(@Param("agricultorId") UUID agricultorId);
+
+    @Query("SELECT p FROM Producto p WHERE p.agricultor.id = :agricultorId " +
+            "AND (:estado IS NULL OR p.estado = :estado)")
+    Page<Producto> findByAgricultorIdAndEstado(
+            @Param("agricultorId") UUID agricultorId,
+            @Param("estado") EstadoProducto estado,
             Pageable pageable);
 }
