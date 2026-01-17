@@ -32,26 +32,51 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-
                 .authorizeHttpRequests(auth -> auth
+                        // ===== ENDPOINTS PUBLICOS =====
+
+                        // Auth endpoints (register, login, logout)
                         .requestMatchers("/auth/**").permitAll()
 
-                        // Endpoints públicos de productos
+                        // Productos publicos (solo lectura)
                         .requestMatchers(HttpMethod.GET, "/api/v1/productos/detalle/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/productos/buscar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/productos/filtro").permitAll()
+
+                        // Metricas públicas del agricultor
                         .requestMatchers(HttpMethod.GET, "/api/v1/agricultor/*/metricas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/agricultor/*/productos").permitAll()
-                        //
+
+                        // ===== ENDPOINTS PROTEGIDOS =====
+
+                        // Usuarios autenticados
+                        .requestMatchers(HttpMethod.GET, "/usuarios/me").authenticated()
+
+                        // Productos (CRUD - requiere autenticación)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/productos").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/productos").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/productos/eliminar/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/productos/actualizar/**").authenticated()
+
+                        // Favoritos (requiere autenticación)
+                        .requestMatchers("/api/v1/favoritos/**").authenticated()
+
+                        // Difusión (requiere autenticación - según Swagger no especifica rol)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/difusion/enviar").authenticated()
+
+                        // Monetización (requiere autenticación)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/monetizacion/pago").authenticated()
+
+                        // Administración (requiere rol ADMIN)
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
+                        // Cualquier otro endpoint requiere autenticación por defecto
                         .anyRequest().authenticated()
                 )
-
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .authenticationProvider(authenticationProvider())
-
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

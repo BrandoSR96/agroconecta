@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LoginRequest {
     @NotBlank(message = "El email es obligatorio")
-    @Email(message = "Debe ser un emial valido")
+    @Email(message = "Debe ser un email valido")
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
